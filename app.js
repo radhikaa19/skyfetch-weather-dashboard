@@ -1,37 +1,61 @@
-// Your OpenWeatherMap API Key
-const API_KEY =  'https://api.openweathermap.org/data/2.5/weather?q=London&appid=e1742fafdafdb55012663a23ff9afa1f&units=metric'
+// Your OpenWeatherMap API Key (ONLY KEY, not full URL)
+const API_KEY = 'e1742fafdafdb55012663a23ff9afa1f';
 const API_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
-// Function to fetch weather data
-function getWeather(city) {
-    // Build the complete URL
-    const url = `${API_URL}?q=${city}&appid=${API_KEY}&units=metric`;
-    
-    // Make API call using Axios
-    axios.get(url)
-        .then(function(response) {
-            // Success! We got the data
-            console.log('Weather Data:', response.data);
-            displayWeather(response.data);
-        })
-        .catch(function(error) {
-            // Something went wrong
-            console.error('Error fetching weather:', error);
-            document.getElementById('weather-display').innerHTML = 
-                '<p class="loading">Could not fetch weather data. Please try again.</p>';
-        });
+
+// 🔄 Show Loading Spinner
+function showLoading() {
+    const loadingHTML = `
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Loading weather data...</p>
+        </div>
+    `;
+    document.getElementById('weather-display').innerHTML = loadingHTML;
 }
 
-// Function to display weather data
+
+// ❌ Show Error Message
+function showError(message) {
+    const errorHTML = `
+        <div class="loading-container">
+            <p style="color:red;">${message}</p>
+        </div>
+    `;
+    document.getElementById('weather-display').innerHTML = errorHTML;
+}
+
+
+// 🌤️ Fetch Weather Data (Async Version)
+async function getWeather(city) {
+    showLoading();   // ⭐ show loading at start
+
+    const url = `${API_URL}?q=${city}&appid=${API_KEY}&units=metric`;
+
+    try {
+        const response = await axios.get(url);
+        displayWeather(response.data);
+    } 
+    catch (error) {
+        console.error('Error:', error);
+
+        if (error.response && error.response.status === 404) {
+            showError('City not found. Please check spelling.');
+        } else {
+            showError('Something went wrong. Try again later.');
+        }
+    }
+}
+
+
+// 🌍 Display Weather
 function displayWeather(data) {
-    // Extract the data we need
     const cityName = data.name;
     const temperature = Math.round(data.main.temp);
     const description = data.weather[0].description;
     const icon = data.weather[0].icon;
     const iconUrl = `https://openweathermap.org/img/wn/${icon}@2x.png`;
-    
-    // Create HTML to display
+
     const weatherHTML = `
         <div class="weather-info">
             <h2 class="city-name">${cityName}</h2>
@@ -40,10 +64,10 @@ function displayWeather(data) {
             <p class="description">${description}</p>
         </div>
     `;
-    
-    // Put it on the page
+
     document.getElementById('weather-display').innerHTML = weatherHTML;
 }
 
-// Call the function when page loads
+
+// Call on page load
 getWeather('London');
